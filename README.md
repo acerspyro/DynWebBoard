@@ -1,7 +1,5 @@
 ## Dynamic Web Board (DynWebBoard)
 
----
-
 Dynamic Web Board is a NodeJS+Electron take on a rôtisserie-style web display for:
 
 * Halls
