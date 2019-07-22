@@ -1,0 +1,14 @@
+{
+  "name": "dynwebboard",
+  "version": "0.1.0",
+  "description": "A dynamic, web-based display board for advertising",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Maxim Therrien",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^4.1.4"
+  }
+}
