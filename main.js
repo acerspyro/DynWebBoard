@@ -2,15 +2,47 @@
 
 const {app,BrowserWindow} = require('electron');
 const ipc                 = require('electron').ipcMain;
+const Client              = require('pg');
 const path                = require('path');
 
+const dwb = Object();
 
-//const BrowserWindow = remote.BrowserWindow;
+dwb.Presentable = class {
+
+    // Constructor
+    //    type    -> Type,
+    //    config  -> Configuration Object: {
+    //        uri:        URI of the presentable, either a URL or a file path
+    //        duration:   Duration of the presentable, in seconds (Default: 20s)
+    //        wait:       Time allocated to load the presentable, make longer for slower websites (Default: 10s)
+    //        transition: (TODO) Transition used when the presentable moves on-screen (Default: fade)
+    //    }
+    constructor(type, config) {
+        this.type   = (Object.keys(types).find(e => e == type) ? type : new TypeError('Invalid Presentable type'));
+        this.config = {
+            uri:        (typeof config.uri == 'string' ? config.uri : new Error('Invalid uri, expected string')),
+            duration:   (typeof config.duration == 'number' ? config.duration : undefined),
+            wait:       (typeof config.wait == 'number' ? config.wait : undefined),
+            transition: (Object.keys(types).find(e => e == config.transition) ? config.transition : undefined)
+        };
+
+        // Implement failure procedure as fallback?
+    }
+
+    static types = {
+        WEBSITE: 0,
+        WEBPAGE: 1,
+        IMAGE:   2, // Includes GIFs and WebMs
+        VIDEO:   3
+    }
+
+    static transitions = {
+        FADE: 0
+    }
+}
 
 global.contentConfig = null;
 global.currentViewID = 0;
-//global.openWebPages = new Array();
-
 
 app.on('ready', () => {
 
@@ -30,7 +62,7 @@ app.on('ready', () => {
     });
 
     // Load our main content (./index.html)
-    global.appWindow.loadURL(path.join('file://', __dirname, 'index.html'));
+    global.appWindow.loadURL(path.join('file://', __dirname, 'web/display.html'));
 
     // Initialize the window
     global.appWindow.show();
@@ -74,100 +106,3 @@ app.on('ready', () => {
     });
 
 });
-
-
-/*
-class WebPage {
-    constructor(prop) {
-        this.prop = prop;
-
-        this.win = new BrowserWindow(
-            {"kiosk": true, "frame": false}
-        );
-
-        global.openWebPages.push(this);
-    }
-
-    loadWebPage() {
-        this.win.loadURL(this.prop.url);
-
-        function ready_to_show(that) {
-            that.win.show();
-
-            if (global.openWebPages.length > 1) {
-                try {
-                    global.openWebPages[
-                        global.openWebPages.indexOf(that)-1
-                    ].hideWebPage();
-                } catch {
-                    global.openWebPages[
-                        global.openWebPages.length-1
-                    ].hideWebPage();
-                }
-
-                function f_hideTimer(that) {
-                    try {
-                        global.openWebPages[
-                            global.openWebPages.indexOf(that)+1
-                        ].loadWebPage();
-                    } catch {
-                        global.openWebPages[0].loadWebPage();
-                    }
-                }
-
-                that.hideTimer = setTimeout(
-                    f_hideTimer.bind(null, that),
-                    that.prop.duration*1000
-                );
-            }
-        }
-
-        this.win.webContents.once('dom-ready', ready_to_show.bind(null, this));
-    }
-
-    hideWebPage() {
-        this.win.hide();
-    }
-
-    destroy() {
-        this.win = null;
-
-        global.openWebPages.splice(
-            global.openWebPages.indexOf(this), 1
-        );
-    }
-}
-
-function main() {
-    app.on('ready', () => {
-        loadConf();
-    });
-}
-
-function loadConf() {
-    oldPackage = global.sitesConfig;
-
-    try {
-        global.sitesConfig = require('./package.json').sites;
-
-        if (oldPackage != global.sitesConfig) {
-            global.sitesConfig.forEach(site => {
-                new WebPage(site);
-            });
-            global.openWebPages.forEach(page => {
-                page.loadWebPage();
-            });
-        }
-    } catch {
-        if (global.sitesConfig == null) {
-            console.log('ERR: Cannot start due to invalid configuration. Please check your package.json!');
-            process.exit();
-        } else {
-            console.log('WARN: Current configuration invalid, keeping known good configuration.');
-        }
-    }
-}
-
-main();
-
-*/
