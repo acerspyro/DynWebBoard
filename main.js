@@ -2,7 +2,8 @@
 
 const {app,BrowserWindow} = require('electron');
 const ipc                 = require('electron').ipcMain;
-const Client              = require('pg');
+const sqlite3             = require('sqlite3').verbose();
+const fs                  = require('fs');
 const path                = require('path');
 
 const dwb = Object();
@@ -18,29 +19,85 @@ dwb.Presentable = class {
     //        transition: (TODO) Transition used when the presentable moves on-screen (Default: fade)
     //    }
     constructor(type, config) {
-        this.type   = (Object.keys(types).find(e => e == type) ? type : new TypeError('Invalid Presentable type'));
+        this.type   = (Object.keys(this.types).find(e => e == type) ? type : new TypeError('Invalid Presentable type'));
         this.config = {
             uri:        (typeof config.uri == 'string' ? config.uri : new Error('Invalid uri, expected string')),
             duration:   (typeof config.duration == 'number' ? config.duration : undefined),
             wait:       (typeof config.wait == 'number' ? config.wait : undefined),
-            transition: (Object.keys(types).find(e => e == config.transition) ? config.transition : undefined)
+            transition: (Object.keys(this.types).find(e => e == config.transition) ? config.transition : undefined)
         };
 
         // Implement failure procedure as fallback?
     }
 
-    static types = {
-        WEBSITE: 0,
-        WEBPAGE: 1,
-        IMAGE:   2, // Includes GIFs and WebMs
-        VIDEO:   3
+    get types() {
+        return {
+            WEBSITE: 0,
+            WEBPAGE: 1,
+            IMAGE:   2, // Includes GIFs and WebMs
+            VIDEO:   3
+        };
     }
-
-    static transitions = {
-        FADE: 0
+    
+    get transitions() {
+        return {
+            FADE: 0
+        };
     }
 }
 
+dwb.Database = class {
+
+    // Constructor
+    //    path -> Path to the PostgreSQL database
+    constructor(path) {
+        this.path = path;
+        this.db = this.connect(path);
+    }
+
+    // connect
+    //    path -> Path to the PostgreSQL database
+    // Connects to an existing database at the specified location on the system, creates it if necessary
+    async connect(path) {
+        let ret = await new sqlite3.Database(path, err => {
+            if (err) console.error(`[E] Connection to database "${path}" failed:\n    > ${err.message}`);
+            else console.log(`[I] Connection to database "${path} successful"`);
+        });
+        return ret;
+    }
+
+    // sanityCheck() (TODO)
+    //    Performs a sanity check on the database.
+    get sanityCheck() {}
+
+    async getPresentable(id) {
+        if (!db) connect(this.path);
+
+        let sql = [
+            `SELECT Name FROM 'displays' WHERE ID = "${id}"`,
+            `SELECT * FROM 'presentables' WHERE display_id = "${id}"`
+        ], ret = Object();
+
+        await this.db.get(sql[0], [], (err, row) => {
+            if (err) console.error(`[E] Fetching display with ID "${id}" failed:\n    > ${err.message}`);
+            ret.name = row.Name;
+        });
+        await this.db.each(sql[1], [], (err, row) => {
+            if (err) console.error(`[E] Fetching presentable with display_id "${id}" failed:\n    > ${err.message}`);
+            ret.presentable = row;
+        });
+
+        return ret;
+    }
+}
+
+db = new dwb.Database("./test2.db");
+
+db.getPresentable(0);
+
+debugger;
+
+/*
 global.contentConfig = null;
 global.currentViewID = 0;
 
@@ -106,3 +163,5 @@ app.on('ready', () => {
     });
 
 });
+
+*/

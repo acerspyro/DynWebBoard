@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "description": "A dynamic, web-based display board for advertising",
   "main": "main.js",
+  "repository": "https://github.com/acerspyro/DynWebBoard",
   "scripts": {
     "start": "electron ."
   },
   "author": "Maxim Therrien",
-  "license": "MIT",
+  "license": "GPL3",
   "dependencies": {
     "electron": "^4.1.4",
-    "pg": "^7.11.0"
+    "sqlite3": "^4.0.9"
   }
 }
