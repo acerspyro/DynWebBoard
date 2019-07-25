@@ -52,39 +52,116 @@ dwb.Database = class {
     //    path -> Path to the PostgreSQL database
     constructor(path) {
         this.path = path;
-        this.db = this.connect(path);
     }
 
     // connect
     //    path -> Path to the PostgreSQL database
     // Connects to an existing database at the specified location on the system, creates it if necessary
-    async connect(path) {
-        let ret = await new sqlite3.Database(path, err => {
+    connect(path) {
+        this.db = new sqlite3.Database(path, err => {
             if (err) console.error(`[E] Connection to database "${path}" failed:\n    > ${err.message}`);
             else console.log(`[I] Connection to database "${path} successful"`);
+        }); let sanity = this.sanityCheck();
+
+        return (sanity ? this.db : sanity);
+    }
+
+    get sql() {
+        return {
+            GetDisplayByID:             `SELECT * FROM 'displays' WHERE id = ?`,
+            GetProfileByID:             `SELECT * FROM 'profiles' WHERE id = ?`,
+            GetPresentableByID:         `SELECT * FROM 'presentables' WHERE id = ?`,
+            GetPresentablesByProfileID: `SELECT * FROM 'presentables' WHERE profile_id = ?`,
+            CreateDisplaysTable: `
+                CREATE TABLE [IF NOT EXISTS] 'displays'(
+                    id          INT         AUTO_INCREMENT,
+                    profile_id  INT         NOT NULL,
+                    name        VARCHAR(48) NOT NULL,
+                    PRIMARY KEY (id)
+                )`,
+            CreateProfilesTable: `
+                CREATE TABLE [IF NOT EXISTS] 'profiles'(
+                    id          INT         AUTO_INCREMENT,
+                    name        VARCHAR(48) NOT NULL,
+                    PRIMARY KEY (id)
+                )`,
+            CreatePresentablesTable: `
+                CREATE TABLE [IF NOT EXISTS] 'presentables'(
+                    id          INT         AUTO_INCREMENT,
+                    profile_id  INT         NOT NULL,
+                    uri         TEXT        NOT NULL,
+                    type        int         NOT NULL,
+                    parameters  TEXT,
+                    PRIMARY KEY (id)
+                )`
+        };
+    }
+
+    // sanityCheck()
+    //    Performs a sanity check on the database.
+    sanityCheck() {
+        let sane = true;
+
+        function checkerr(err) {
+            if (err) {
+                console.error(`[E] sanityCheck failed:\n    > ${err.message}`);
+                sane = false; // Table did not exist and could not set table, unset sane flag
+            }
+        };
+
+        // Check if tables exist, if not, create them.
+        this.db.run(this.sql.CreateDisplaysTable, null, checkerr);
+        this.db.run(this.sql.CreateProfilesTable, null, checkerr);
+        this.db.run(this.sql.CreatePresentablesTable, null, checkerr);
+
+        // TODO: Check if table columns are valid, if not, adjust them
+
+        return sane;
+    }
+
+    getOneByID(id, queryName) {
+        if (!this.db) this.connect(this.path);
+        let ret = Object();
+
+        this.db.each(this.sql[queryName], id, (err, row) => {
+            if (err) console.error(`[E] ${queryName} "${id}" failed:\n    > ${err.message}`);
+            ret = row;
         });
+
         return ret;
     }
 
-    // sanityCheck() (TODO)
-    //    Performs a sanity check on the database.
-    get sanityCheck() {}
+    getDisplayByID(id) {
+        return this.getOneByID(id, 'GetDisplayByID');
+    }
 
-    async getPresentable(id) {
-        if (!db) connect(this.path);
+    getProfileByID(id) {
+        return this.getOneByID(id, 'GetProfileByID');
+    }
 
-        let sql = [
-            `SELECT Name FROM 'displays' WHERE ID = "${id}"`,
-            `SELECT * FROM 'presentables' WHERE display_id = "${id}"`
-        ], ret = Object();
+    getPresentableByID(id) {
+        return this.getOneByID(id, 'GetPresentableByID');
+    }
 
-        await this.db.get(sql[0], [], (err, row) => {
-            if (err) console.error(`[E] Fetching display with ID "${id}" failed:\n    > ${err.message}`);
-            ret.name = row.Name;
-        });
-        await this.db.each(sql[1], [], (err, row) => {
-            if (err) console.error(`[E] Fetching presentable with display_id "${id}" failed:\n    > ${err.message}`);
+    getPresentableByID(id) {
+        if (!this.db) this.connect(this.path);
+        let ret = Object();
+
+        this.db.each(this.sql.GetPresentableByID, id, (err, row) => {
+            if (err) console.error(`[E] getPresentableByID "${id}" failed:\n    > ${err.message}`);
             ret.presentable = row;
+        });
+
+        return ret;
+    }
+
+    getPresentablesByProfileID(id) {
+        if (!this.db) this.connect(this.path);
+        let ret = Object();
+
+        this.db.get(this.sql.GetPresentablesByProfileID, id, (err, row) => {
+            if (err) console.error(`[E] getPresentablesByProfileID "${id}" failed:\n    > ${err.message}`);
+            ret.name = row.Name;
         });
 
         return ret;
@@ -93,7 +170,7 @@ dwb.Database = class {
 
 db = new dwb.Database("./test2.db");
 
-db.getPresentable(0);
+db.getPresentableByID(0);
 
 debugger;
 
