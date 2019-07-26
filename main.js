@@ -68,25 +68,25 @@ dwb.Database = class {
 
     get sql() {
         return {
-            GetDisplayByID:             `SELECT * FROM 'displays' WHERE id = ?`,
-            GetProfileByID:             `SELECT * FROM 'profiles' WHERE id = ?`,
-            GetPresentableByID:         `SELECT * FROM 'presentables' WHERE id = ?`,
-            GetPresentablesByProfileID: `SELECT * FROM 'presentables' WHERE profile_id = ?`,
+            GetDisplayByID:             `SELECT * FROM displays WHERE id = ?`,
+            GetProfileByID:             `SELECT * FROM profiles WHERE id = ?`,
+            GetPresentableByID:         `SELECT * FROM presentables WHERE id = ?`,
+            GetPresentablesByProfileID: `SELECT * FROM presentables WHERE profile_id = ?`,
             CreateDisplaysTable: `
-                CREATE TABLE [IF NOT EXISTS] 'displays'(
+                CREATE TABLE [IF NOT EXISTS] displays (
                     id          INT         AUTO_INCREMENT,
                     profile_id  INT         NOT NULL,
                     name        VARCHAR(48) NOT NULL,
                     PRIMARY KEY (id)
                 )`,
             CreateProfilesTable: `
-                CREATE TABLE [IF NOT EXISTS] 'profiles'(
+                CREATE TABLE [IF NOT EXISTS] profiles (
                     id          INT         AUTO_INCREMENT,
                     name        VARCHAR(48) NOT NULL,
                     PRIMARY KEY (id)
                 )`,
             CreatePresentablesTable: `
-                CREATE TABLE [IF NOT EXISTS] 'presentables'(
+                CREATE TABLE [IF NOT EXISTS] presentables (
                     id          INT         AUTO_INCREMENT,
                     profile_id  INT         NOT NULL,
                     uri         TEXT        NOT NULL,
@@ -102,9 +102,9 @@ dwb.Database = class {
     sanityCheck() {
         let sane = true;
 
-        function checkerr(err) {
+        let checkerr = err => {
             if (err) {
-                console.error(`[E] sanityCheck failed:\n    > ${err.message}`);
+                console.error(`[E] sanityCheck failed:\n    > ${err}`);
                 sane = false; // Table did not exist and could not set table, unset sane flag
             }
         };
@@ -119,11 +119,12 @@ dwb.Database = class {
         return sane;
     }
 
-    getOneByID(id, queryName) {
+    // Getter generator
+    getByID(id, queryName, method = 'each') {
         if (!this.db) this.connect(this.path);
         let ret = Object();
 
-        this.db.each(this.sql[queryName], id, (err, row) => {
+        this.db[method](this.sql[queryName], id, (err, row) => {
             if (err) console.error(`[E] ${queryName} "${id}" failed:\n    > ${err.message}`);
             ret = row;
         });
@@ -131,48 +132,17 @@ dwb.Database = class {
         return ret;
     }
 
-    getDisplayByID(id) {
-        return this.getOneByID(id, 'GetDisplayByID');
-    }
+    // Define getters
 
-    getProfileByID(id) {
-        return this.getOneByID(id, 'GetProfileByID');
-    }
-
-    getPresentableByID(id) {
-        return this.getOneByID(id, 'GetPresentableByID');
-    }
-
-    getPresentableByID(id) {
-        if (!this.db) this.connect(this.path);
-        let ret = Object();
-
-        this.db.each(this.sql.GetPresentableByID, id, (err, row) => {
-            if (err) console.error(`[E] getPresentableByID "${id}" failed:\n    > ${err.message}`);
-            ret.presentable = row;
-        });
-
-        return ret;
-    }
-
-    getPresentablesByProfileID(id) {
-        if (!this.db) this.connect(this.path);
-        let ret = Object();
-
-        this.db.get(this.sql.GetPresentablesByProfileID, id, (err, row) => {
-            if (err) console.error(`[E] getPresentablesByProfileID "${id}" failed:\n    > ${err.message}`);
-            ret.name = row.Name;
-        });
-
-        return ret;
-    }
+    getDisplayByID(id) { return this.getByID(id, 'GetDisplayByID'); }
+    getProfileByID(id) { return this.getByID(id, 'GetProfileByID'); }
+    getPresentableByID(id) { return this.getByID(id, 'GetPresentableByID'); }
+    getPresentablesByProfileID(id) { return this.getByID(id, 'GetPresentablesByProfileID', 'get'); }
 }
 
 db = new dwb.Database("./test2.db");
 
 db.getPresentableByID(0);
-
-debugger;
 
 /*
 global.contentConfig = null;
