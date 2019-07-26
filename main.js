@@ -6,9 +6,9 @@ const sqlite3             = require('sqlite3').verbose();
 const fs                  = require('fs');
 const path                = require('path');
 
-const dwb = Object();
+const dynWebBoard = Object();
 
-dwb.Presentable = class {
+dynWebBoard.Presentable = class {
 
     // Constructor
     //    type    -> Type,
@@ -46,57 +46,55 @@ dwb.Presentable = class {
     }
 }
 
-dwb.Database = class {
+dynWebBoard.sql = {
+    GetDisplayByID:             `SELECT * FROM displays WHERE id = ?`,
+    GetProfileByID:             `SELECT * FROM profiles WHERE id = ?`,
+    GetPresentableByID:         `SELECT * FROM presentables WHERE id = ?`,
+    GetPresentablesByProfileID: `SELECT * FROM presentables WHERE profile_id = ?`,
+    CreateDisplaysTable: `
+        CREATE TABLE IF NOT EXISTS displays (
+            id          INT         PRIMARY KEY,
+            profile_id  INT         NOT NULL,
+            name        VARCHAR(48) NOT NULL
+        )`,
+    CreateProfilesTable: `
+        CREATE TABLE IF NOT EXISTS profiles (
+            id          INT         PRIMARY KEY,
+            name        VARCHAR(48) NOT NULL
+        )`,
+    CreatePresentablesTable: `
+        CREATE TABLE IF NOT EXISTS presentables (
+            id          INT         PRIMARY KEY,
+            profile_id  INT         NOT NULL,
+            uri         TEXT        NOT NULL,
+            type        INT         NOT NULL,
+            parameters  TEXT
+        )`
+}
+
+dynWebBoard.Database = class {
 
     // Constructor
-    //    path -> Path to the PostgreSQL database
+    //    path -> Path to the SQLite database
     constructor(path) {
         this.path = path;
     }
 
     // connect
-    //    path -> Path to the PostgreSQL database
+    //    path -> Path to the SQLite database
     // Connects to an existing database at the specified location on the system, creates it if necessary
-    connect(path) {
+    async connect(path) {
         this.db = new sqlite3.Database(path, err => {
             if (err) console.error(`[E] Connection to database "${path}" failed:\n    > ${err.message}`);
             else console.log(`[I] Connection to database "${path} successful"`);
-        }); let sanity = this.sanityCheck();
+        }); let sanity = await this.sanityCheck();
 
         return (sanity ? this.db : sanity);
     }
 
-    get sql() {
-        return {
-            GetDisplayByID:             `SELECT * FROM displays WHERE id = ?`,
-            GetProfileByID:             `SELECT * FROM profiles WHERE id = ?`,
-            GetPresentableByID:         `SELECT * FROM presentables WHERE id = ?`,
-            GetPresentablesByProfileID: `SELECT * FROM presentables WHERE profile_id = ?`,
-            CreateDisplaysTable: `
-                CREATE TABLE IF NOT EXISTS displays (
-                    id          INT         PRIMARY KEY,
-                    profile_id  INT         NOT NULL,
-                    name        VARCHAR(48) NOT NULL
-                )`,
-            CreateProfilesTable: `
-                CREATE TABLE IF NOT EXISTS profiles (
-                    id          INT         PRIMARY KEY,
-                    name        VARCHAR(48) NOT NULL
-                )`,
-            CreatePresentablesTable: `
-                CREATE TABLE IF NOT EXISTS presentables (
-                    id          INT         PRIMARY KEY,
-                    profile_id  INT         NOT NULL,
-                    uri         TEXT        NOT NULL,
-                    type        INT         NOT NULL,
-                    parameters  TEXT
-                )`
-        };
-    }
-
     // sanityCheck()
     //    Performs a sanity check on the database.
-    sanityCheck() {
+    async sanityCheck() {
         let sane = true;
 
         let checkerr = err => {
@@ -107,9 +105,9 @@ dwb.Database = class {
         };
 
         // Check if tables exist, if not, create them.
-        this.db.run(this.sql.CreateDisplaysTable, checkerr);
-        this.db.run(this.sql.CreateProfilesTable, checkerr);
-        this.db.run(this.sql.CreatePresentablesTable, checkerr);
+        await this.db.run(dynWebBoard.sql.CreateDisplaysTable, checkerr);
+        await this.db.run(dynWebBoard.sql.CreateProfilesTable, checkerr);
+        await this.db.run(dynWebBoard.sql.CreatePresentablesTable, checkerr);
 
         // TODO: Check if table columns are valid, if not, adjust them
 
@@ -121,7 +119,7 @@ dwb.Database = class {
         if (!this.db) this.connect(this.path);
         let ret = Object();
 
-        this.db[method](this.sql[queryName], id, (err, row) => {
+        this.db[method](dynWebBoard.sql[queryName], id, (err, row) => {
             if (err) console.error(`[E] ${queryName} "${id}" failed:\n    > ${err.message}`);
             ret = row;
         });
@@ -137,7 +135,7 @@ dwb.Database = class {
     getPresentablesByProfileID(id) { return this.getByID(id, 'GetPresentablesByProfileID', 'get'); }
 }
 
-db = new dwb.Database("./test2.db");
+db = new dynWebBoard.Database("./test2.db");
 
 db.getPresentableByID(0);
 
