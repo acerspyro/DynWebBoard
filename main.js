@@ -73,26 +73,23 @@ dwb.Database = class {
             GetPresentableByID:         `SELECT * FROM presentables WHERE id = ?`,
             GetPresentablesByProfileID: `SELECT * FROM presentables WHERE profile_id = ?`,
             CreateDisplaysTable: `
-                CREATE TABLE [IF NOT EXISTS] displays (
-                    id          INT         AUTO_INCREMENT,
+                CREATE TABLE IF NOT EXISTS displays (
+                    id          INT         PRIMARY KEY,
                     profile_id  INT         NOT NULL,
-                    name        VARCHAR(48) NOT NULL,
-                    PRIMARY KEY (id)
+                    name        VARCHAR(48) NOT NULL
                 )`,
             CreateProfilesTable: `
-                CREATE TABLE [IF NOT EXISTS] profiles (
-                    id          INT         AUTO_INCREMENT,
-                    name        VARCHAR(48) NOT NULL,
-                    PRIMARY KEY (id)
+                CREATE TABLE IF NOT EXISTS profiles (
+                    id          INT         PRIMARY KEY,
+                    name        VARCHAR(48) NOT NULL
                 )`,
             CreatePresentablesTable: `
-                CREATE TABLE [IF NOT EXISTS] presentables (
-                    id          INT         AUTO_INCREMENT,
+                CREATE TABLE IF NOT EXISTS presentables (
+                    id          INT         PRIMARY KEY,
                     profile_id  INT         NOT NULL,
                     uri         TEXT        NOT NULL,
-                    type        int         NOT NULL,
-                    parameters  TEXT,
-                    PRIMARY KEY (id)
+                    type        INT         NOT NULL,
+                    parameters  TEXT
                 )`
         };
     }
@@ -110,9 +107,9 @@ dwb.Database = class {
         };
 
         // Check if tables exist, if not, create them.
-        this.db.run(this.sql.CreateDisplaysTable, null, checkerr);
-        this.db.run(this.sql.CreateProfilesTable, null, checkerr);
-        this.db.run(this.sql.CreatePresentablesTable, null, checkerr);
+        this.db.run(this.sql.CreateDisplaysTable, checkerr);
+        this.db.run(this.sql.CreateProfilesTable, checkerr);
+        this.db.run(this.sql.CreatePresentablesTable, checkerr);
 
         // TODO: Check if table columns are valid, if not, adjust them
 
