@@ -2,7 +2,6 @@
 
 const {app,BrowserWindow} = require('electron');
 const ipc                 = require('electron').ipcMain;
-const sqlite3             = require('sqlite3').verbose();
 const fs                  = require('fs');
 const path                = require('path');
 
@@ -84,9 +83,11 @@ dynWebBoard.Database = class {
     //    path -> Path to the SQLite database
     // Connects to an existing database at the specified location on the system, creates it if necessary
     async connect(path) {
-        this.db = new sqlite3.Database(path, err => {
-            if (err) console.error(`[E] Connection to database "${path}" failed:\n    > ${err.message}`);
-            else console.log(`[I] Connection to database "${path} successful"`);
+        this.db = require('knex')({
+            client: 'sqlite3',
+            connection: {
+                filename: path
+            }
         }); let sanity = await this.sanityCheck();
 
         return (sanity ? this.db : sanity);
@@ -94,7 +95,7 @@ dynWebBoard.Database = class {
 
     // sanityCheck()
     //    Performs a sanity check on the database.
-    async sanityCheck() {
+    sanityCheck() {
         let sane = true;
 
         let checkerr = err => {
@@ -105,9 +106,23 @@ dynWebBoard.Database = class {
         };
 
         // Check if tables exist, if not, create them.
-        await this.db.run(dynWebBoard.sql.CreateDisplaysTable, checkerr);
-        await this.db.run(dynWebBoard.sql.CreateProfilesTable, checkerr);
-        await this.db.run(dynWebBoard.sql.CreatePresentablesTable, checkerr);
+        this.db.schema
+            .createTable('displays', table => {
+                table.increments();
+                table.int('profile_id');
+                table.string('name');
+            })
+            .createTable('profiles', table => {
+                table.increments();
+                table.string('name');
+            })
+            .createTable('presentables', table => {
+                table.increments();
+                table.int('profile_id');
+                table.text('uri');
+                table.int('type');
+                table.text('parameters');
+            }).asCallback(checkerr);
 
         // TODO: Check if table columns are valid, if not, adjust them
 
