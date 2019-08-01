@@ -3,3 +3,4 @@ package-lock.json
 sites.json
 uploads/
 *.sh
+*.db
