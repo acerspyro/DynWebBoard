@@ -1,10 +1,9 @@
-import Knex = require("knex");
-
-const knex = require('knex');
+import knex from "knex";
+import fs from 'fs';
 
 class Database {
     path: string; // SQLite DB Path
-    dbObject: Knex;
+    dbObject: knex;
 
     constructor(path: string) {
         this.path = path;
@@ -23,7 +22,7 @@ class Database {
         return (sanity ? this.dbObject : sanity);
     }
 
-    checkSanity(dbObject: Knex = this.dbObject) { /* Sanity check on a given database */
+    checkSanity(dbObject: knex = this.dbObject) { /* Sanity check on a given database */
         let sane = true;
 
         let checkerr = (e: Error) => {
@@ -77,3 +76,5 @@ class Database {
     getPresentableByID(id) { return this.getByID(id, 'GetPresentableByID'); }
     getPresentablesByProfileID(id) { return this.getByID(id, 'GetPresentablesByProfileID', 'get'); }
 }
+
+export default Database;
