@@ -1,15 +1,18 @@
-import {app, BrowserWindow, ipcMain} from 'electron';
-import path from 'path';
-
 import Presentable  from './presentable';
-import Display      from './display';
-import Profile      from './profile';
+//import Display      from './display';
+//import Profile      from './profile';
+import Config       from './config';
 import Database     from './database';
 
-export default () => {};
+function init() {
+    let config = new Config();
+}
+
+export default init;
 export {
     Presentable,
-    Display,
-    Profile,
+    //Display,
+    //Profile,
+    Config,
     Database
 };

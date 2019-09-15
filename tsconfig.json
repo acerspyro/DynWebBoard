@@ -1,0 +1,17 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "declaration": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "outDir": "./build",
+        "strict": true
+    },
+    "files": ["src/globals.d.ts"],
+    "include": ["src"],
+    "exclude": ["node_modules", "**/__tests__/*"]
+}

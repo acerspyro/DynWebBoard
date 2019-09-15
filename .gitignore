@@ -2,5 +2,8 @@ node_modules
 package-lock.json
 sites.json
 uploads/
+build/
 *.sh
 *.db
+*.sqlite
+config.json

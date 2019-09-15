@@ -1,11 +1,12 @@
 {
   "name": "dynwebboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A dynamic, web-based display board for advertising",
   "main": "main.js",
   "repository": "https://github.com/acerspyro/DynWebBoard",
   "scripts": {
-    "start": "electron ."
+    "start": "node ./build/main.js",
+    "build": ""
   },
   "author": "Maxim Therrien",
   "license": "GPL3",
@@ -13,7 +14,7 @@
     "electron": "^4.1.4",
     "knex": "^0.19.1",
     "node-sass": "4.12.0",
-    "sqlite3": "^4.0.9",
+    "sqlite3": "^4.1.0",
     "typescript": "3.6.3"
   }
 }
