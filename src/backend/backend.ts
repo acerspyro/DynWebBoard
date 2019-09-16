@@ -6,6 +6,8 @@ import Database     from './database';
 
 function init() {
     let config = new Config();
+
+    config.loadConfig();
 }
 
 export default init;
