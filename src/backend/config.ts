@@ -51,7 +51,7 @@ class Config {
 
         } catch(e) {
 
-            console.error(`[E] Unable to read config file => ${e}`);
+            console.error(`[E] Unable to read config file @ '${path}' => ${e}`);
             return await this.initConfig(path);
             
         }

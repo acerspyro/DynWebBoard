@@ -1,11 +1,12 @@
 import * as knex from "knex";
 import * as fs from 'fs';
+import * as xdgBasedir from 'xdg-basedir';
 
 class Database {
     path: string; // SQLite DB Path
     dbObject: knex;
 
-    constructor(path: string) {
+    constructor(path: string = `${xdgBasedir.config}/dwb/dynwebboard.sqlite`) {
         this.path = path;
         this.dbObject = knex("");
     }
@@ -14,25 +15,44 @@ class Database {
         this.dbObject.destroy();
     }
 
-    connect(path: string) {
+    async connect(path: string = this.path) {
 
-        this.dbObject = knex({
-            client: 'sqlite3',
-            connection: {
-                filename: path
-            },
-            useNullAsDefault: true
-        });
-        
-        return this.checkSanity(this.dbObject);
+        try {
+
+            this.dbObject = knex({
+                client: 'sqlite3',
+                connection: {
+                    filename: path
+                },
+                useNullAsDefault: true
+            });
+            
+            await this.checkSanity(this.dbObject);
+            console.info(`[I] Database loaded @ '${path}'`);
+            
+            return true;
+
+        } catch(e) {
+
+            console.error(`[E] Database could not be loaded @ '${path}' => ${e}`);
+            console.warn(`[W] WARNING: Running off of a volatile database!`);
+            console.warn(`[W] WARNING: DynWebBoard is in DEMO MODE, your changes will NOT be saved! You have been WARNED!`);
+            console.info("[I] Stub: connect():noDatabaseLoaded");
+            return false;
+
+        }
+
     }
 
-    checkSanity(dbObject: knex = this.dbObject) { /* Sanity check on a given database */
+    async checkSanity(dbObject: knex = this.dbObject) { /* Sanity check on a given database */
 
-        let dbObjectFilename = dbObject.client.connectionSettings.filename;
+        let path = dbObject.client.connectionSettings.filename;
 
-        function initDatabase(dbObject: knex) { /* Initialize a fresh database */
-            return dbObject.schema
+        async function initDatabase() { /* Initialize a fresh database */
+
+            // TODO: Backup database to avoid data loss
+
+            return await dbObject.schema
                 .createTable('displays', (table: any) => {
                     table.increments();
                     table.integer('profile_id');
@@ -50,40 +70,54 @@ class Database {
                     table.text('parameters');
                 })
                 .asCallback((e: Error) => {
-                    if (e)  console.error(`[E] Unable to create database => ${e}`);
-                    else    console.log(`[I] New database created => ${dbObjectFilename}`);
+                    if (e)  console.error(`[E] Unable to create database @ '${path}' => ${e}`);
+                    else    console.log(`[I] Created new database @ '${path}'`);
                 });
+
         }
 
-        function verifyDatabase(dbObject: knex, deepVerify: boolean = false) { /* Verify database for corruption. */
+        function verifyDatabase(deepVerify: boolean = false) { /* Verify database for corruption. */
             /* If deepVerify is false, simply check that table structures are correct.
              * If deepVerify is true, iterate through each table entry to verify the data format.*/
 
             /* TO DO */
 
+            console.info(`[I] Verifying database integrity...`);
             console.info("[I] Stub: verifyDatabase()");
-            return dbObject;
+            
+            return true;
         }
 
-        function repairDatabase(dbObject: knex, deepRepair: boolean = false, backupDatabase: boolean = true) { /* Automatically repair database */
+        function repairDatabase(deepRepair: boolean = false, backupDatabase: boolean = true) { /* Automatically repair database */
             /* If deepRepair is false, simply restore missing tables or headers and set everything to default.
              * If deepRepair is true, iterate through data and either attempt to rescue corrupt data or restore to default. */
 
             /* TO DO */
 
+            console.info(`[I] Repairing database...`);
             console.info("[I] Stub: repairDatabase()");
-            return dbObject;
+            return true;
         }
 
-        fs.access(dbObjectFilename, fs.constants.F_OK, (e: any) => {
-            if (e) {
-                console.warn(`[W] File with path ${dbObjectFilename} does not exist. Creating fresh database.`);
-                initDatabase(this.dbObject);
-            } else {
-                console.info(`[I] File with path ${dbObjectFilename} exists, verifying integrity.`);
-                verifyDatabase(this.dbObject);
+
+        try {
+
+            fs.accessSync(path, fs.constants.F_OK);
+            console.info(`[I] Loaded database @ '${path}'`);
+
+            if (!verifyDatabase()) {
+                if (!repairDatabase()) {
+                    await initDatabase();
+                }
             }
-        });
+
+        } catch(e) {
+
+            console.error(`[E] Unable to load database @ '${path}' => ${e}`);
+            
+            await initDatabase();
+
+        }
 
         return dbObject;
     }

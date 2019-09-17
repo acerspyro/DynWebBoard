@@ -4,13 +4,16 @@ import Presentable  from './presentable';
 import Config       from './config';
 import Database     from './database';
 
-function init() {
-    let config = new Config();
+async function Backend() {
 
-    config.loadConfig();
+    let config = new Config();
+    await config.loadConfig();
+
+    let database = new Database();
+    database.connect();
 }
 
-export default init;
+export default Backend;
 export {
     Presentable,
     //Display,
