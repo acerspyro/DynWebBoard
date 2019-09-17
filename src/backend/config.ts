@@ -12,7 +12,7 @@ class Config {
 
     }
 
-    async initConfig(path: string = this.path) {
+    initConfig(path: string = this.path) {
 
         let defaults = {
             databasePath: `${xdgBasedir.config}/dwb/DynWebBoard.sqlite`,
@@ -32,7 +32,7 @@ class Config {
 
         } finally {
 
-            return JSON.stringify(defaults, null, 4);
+            return defaults
 
         }
 
@@ -47,12 +47,12 @@ class Config {
             let data = fs.readFileSync(path, 'utf8'); // TODO: Check if file is valid!
             console.info(`[I] Read config file @ '${path}'`);
 
-            return data;
+            return this.configObject = JSON.parse(data);
 
         } catch(e) {
 
             console.error(`[E] Unable to read config file @ '${path}' => ${e}`);
-            return await this.initConfig(path);
+            return this.initConfig(path);
             
         }
 

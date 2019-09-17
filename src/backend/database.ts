@@ -57,10 +57,12 @@ class Database {
                     table.increments();
                     table.integer('profile_id');
                     table.string('name');
+                    table.text('paramters');
                 })
                 .createTable('profiles', (table: any) => {
                     table.increments();
                     table.string('name');
+                    table.text('parameters');
                 })
                 .createTable('presentables', (table: any) => {
                     table.increments();
@@ -147,12 +149,14 @@ namespace Database {
     export interface Display {
         id: number,
         profile_id: number,
-        name: string
+        name: string,
+        parameters: string
     }
 
     export interface Profile {
         id: number,
-        name: string
+        name: string,
+        parameters: string
     }
 
     export interface Presentable {
