@@ -11,7 +11,7 @@
   "author": "Maxim Therrien",
   "license": "GPL3",
   "dependencies": {
-    "electron": "^4.1.4",
+    "electron": "^4.2.10",
     "knex": "^0.19.1",
     "node-sass": "4.12.0",
     "sqlite3": "^4.1.0",

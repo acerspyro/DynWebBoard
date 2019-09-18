@@ -8,7 +8,7 @@ class Database {
 
     constructor(path: string = `${xdgBasedir.config}/dwb/dynwebboard.sqlite`) {
         this.path = path;
-        this.dbObject = knex("");
+        this.dbObject = knex('');
     }
 
     destroy() {
@@ -57,7 +57,7 @@ class Database {
                     table.increments();
                     table.integer('profile_id');
                     table.string('name');
-                    table.text('paramters');
+                    table.integer('scale_factor');
                 })
                 .createTable('profiles', (table: any) => {
                     table.increments();
@@ -126,17 +126,20 @@ class Database {
 
     getDisplayByID(id: number) {
         return this.dbObject<Database.Display>('displays')
-            .where('id', id);
+            .where('id', id)
+            .first();
     }
 
     getProfileByID(id: number) {
         return this.dbObject<Database.Profile>('profiles')
-            .where('id', id);
+            .where('id', id)
+            .first();
     }
 
     getPresentableByID(id: number) {
         return this.dbObject<Database.Presentable>('presentables')
-            .where('id', id);
+            .where('id', id)
+            .first();
     }
 
     getPresentablesByProfileID(id: number) {
@@ -150,7 +153,7 @@ namespace Database {
         id: number,
         profile_id: number,
         name: string,
-        parameters: string
+        scale_factor: number
     }
 
     export interface Profile {

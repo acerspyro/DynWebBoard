@@ -1,5 +1,5 @@
 import Presentable  from './presentable';
-//import Display      from './display';
+import Display      from './display';
 //import Profile      from './profile';
 import Config       from './config';
 import Database     from './database';
@@ -10,7 +10,19 @@ async function Backend() {
     await config.loadConfig();
 
     let database = new Database();
-    database.connect();
+    await database.connect();
+
+    async function loadDisplays() {
+
+        //this.database.get();
+
+    }
+
+    database.getDisplayByID(1)
+        .then((b: any) => {
+            console.log(b)
+        });
+
 }
 
 export default Backend;
