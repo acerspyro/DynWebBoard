@@ -2,10 +2,10 @@
 
 //import * as path from 'path';
 
-import Backend from './backend/backend';
+import { Backend } from './backend/backend';
 
 function init() {
-    Backend();
+    const backend = new Backend();
 }
 
 function quit() {

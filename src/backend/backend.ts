@@ -1,35 +1,39 @@
-import Presentable  from './presentable';
-import Display      from './display';
+import * as Presentable from './presentable';
+import * as Display from './display';
 //import Profile      from './profile';
-import Config       from './config';
-import Database     from './database';
+import {Config, ConfigObject} from './config';
+import * as Database from './database';
 
-async function Backend() {
+class Backend {
 
-    let config = new Config();
-    await config.loadConfig();
 
-    let database = new Database();
-    await database.connect();
 
-    async function loadDisplays() {
+    constructor() {}
 
-        //this.database.get();
+    async init() {
+        await config.loadConfig();
 
+        let database = new Database.Database();
+        await database.connect();
+
+        async function loadDisplays() {
+
+            //this.database.get();
+
+        }
+
+        database.getDisplayByID(1)
+            .then((b: any) => {
+                console.log(b)
+            });
     }
-
-    database.getDisplayByID(1)
-        .then((b: any) => {
-            console.log(b)
-        });
 
 }
 
-export default Backend;
 export {
+    Backend,
     Presentable,
-    //Display,
-    //Profile,
+    Display,
     Config,
     Database
 };

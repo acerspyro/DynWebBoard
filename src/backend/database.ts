@@ -171,4 +171,6 @@ namespace Database {
     }
 }
 
-export default Database;
+export {
+    Database
+}
